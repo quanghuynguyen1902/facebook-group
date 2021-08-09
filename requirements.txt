@@ -1,0 +1,14 @@
+arrow
+billiard
+black
+click-didyoumean
+click-plugins
+click-repl
+discord.py
+facebook-sdk
+flake8
+kombu
+pillow
+pip-chill
+python-dotenv
+pytz
