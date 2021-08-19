@@ -7,6 +7,7 @@ from datetime import datetime as dt
 import traceback
 import sys
 import datetime
+from auto_selenium import post_fb
 from error_fb import map_code_error, log_error
 
 
@@ -36,7 +37,7 @@ class AutoTool:
             Crawl 5 posts of group "Biet the deo di lam"
         '''
 
-        url = f"{self.default_fb}/{self.group_id}?fields=feed.limit(5)&access_token={self.access_token}"
+        url = f"{self.default_fb}/{self.group_id}?fields=feed.limit(2)&access_token={self.access_token}"
 
         group_posts = requests.get(url).json()
 
@@ -78,14 +79,14 @@ class AutoTool:
 
         for data in self.filter_datas:
 
-            if "picture" in data:
-                url = f"{self.default_fb}/{data['id']}?{option}&access_token={self.access_token}"
+            # if "picture" in data:
+            url = f"{self.default_fb}/{data['id']}?{option}&access_token={self.access_token}"
 
-                post = requests.get(url).json()
+            post = requests.get(url).json()
 
-                log_error(map_code_error, post)
+            log_error(map_code_error, post)
 
-                self.datas.append(post)
+            self.datas.append(post)
 
         if len(self.datas) == 0:
             raise ValueError("Not found posts with image")
@@ -96,16 +97,15 @@ class AutoTool:
             post datas to group "Com ao gao tien - kiep lam nhan vien
         '''
         
-        for data in self.datas:
-            params = {
-                "url": data["full_picture"],
-                "message": data["message"],
-                "access_token": self.access_token,
-            }
-            url = f"{self.default_fb}/{self.my_group_id}/photos"
-            response = requests.post(url, params=params).json()
-            log_error(map_code_error, response)
-            break
+        # for data in self.datas:
+        params = {
+            "url": "https://i.ytimg.com/vi/lCxDAprbFx8/hqdefault.jpg",
+            "message": "dich nay chan qua",
+            "access_token": self.access_token,
+        }
+        url = f"{self.default_fb}/{self.my_group_id}/photos"
+        response = requests.post(url, params=params).json()
+        log_error(map_code_error, response)
 
 try:
     crawl = AutoTool()
@@ -113,6 +113,6 @@ try:
     crawl.crawl_posts()
     crawl.filter_posts()
     crawl.get_datas()
-    crawl.post_group()
+    post_fb("Gần mực thì đen Gần ngày lấy lương thì kế toán đi đẻ")
 except Exception as e:
     print(f"Traceback: {traceback.format_exc()}")
