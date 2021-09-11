@@ -1,0 +1,10 @@
+version: '3.0'
+
+services:
+  tool:
+    image: fb-tool
+    restart: always
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env

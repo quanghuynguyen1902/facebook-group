@@ -7,12 +7,13 @@ from datetime import datetime as dt
 import traceback
 import sys
 import datetime
-from auto_selenium import post_fb
+from fb import post_fb
 from error_fb import map_code_error, log_error
 
 
 class AutoTool:
     def __init__(self):
+        self.number_post = ""
         self.group_id = ""
         self.access_token = ""
         self.page_token = ""
@@ -28,6 +29,7 @@ class AutoTool:
         self.access_token = os.getenv("access_token")
         self.group_id = os.getenv("group_id")
         self.my_group_id = os.getenv("my_group_id")
+        self.number_post = os.getenv("number_post")
 
         if self.access_token == "" or self.group_id == "":
             raise ValueError("Error when load env file")
@@ -37,7 +39,7 @@ class AutoTool:
             Crawl 5 posts of group "Biet the deo di lam"
         '''
 
-        url = f"{self.default_fb}/{self.group_id}?fields=feed.limit(2)&access_token={self.access_token}"
+        url = f"{self.default_fb}/{self.group_id}?fields=feed.limit({self.number_post})&access_token={self.access_token}"
 
         group_posts = requests.get(url).json()
 
@@ -57,15 +59,15 @@ class AutoTool:
 
         # get today's date
         time_now = dt.now(VN_TZ)
-        time_ago = dt.now(VN_TZ) - datetime.timedelta(minutes=60)
+        time_ago = dt.now(VN_TZ) - datetime.timedelta(minutes=360)
 
         for data in self.crawl_datas:
-            # created_time = parser.parse(
-            #     parser.parse(data["created_time"]).astimezone(VN_TZ).isoformat()
-            # )
+            created_time = parser.parse(
+                parser.parse(data["updated_time"]).astimezone(VN_TZ).isoformat()
+            )
 
-            # if created_time >= time_ago and created_time <= time_now:
-            self.filter_datas.append(data)
+            if created_time >= time_ago and created_time <= time_now:
+                self.filter_datas.append(data)
 
         if len(self.filter_datas) == 0:
             raise ValueError("Not found valid posts")
@@ -108,11 +110,14 @@ class AutoTool:
         log_error(map_code_error, response)
 
 try:
+    account = {"gmail": "taolasieunhansylas@gmail.com", "password": "asdfjkieurnakf934@"}
     crawl = AutoTool()
     crawl.load_env()
     crawl.crawl_posts()
     crawl.filter_posts()
     crawl.get_datas()
-    post_fb("Gần mực thì đen Gần ngày lấy lương thì kế toán đi đẻ")
+    for content in crawl.datas:
+        post_fb(account, content)
+
 except Exception as e:
     print(f"Traceback: {traceback.format_exc()}")

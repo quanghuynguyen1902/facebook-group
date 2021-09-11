@@ -5,10 +5,12 @@ click-didyoumean
 click-plugins
 click-repl
 discord.py
-facebook-sdk
 flake8
 kombu
+numpy
 pillow
 pip-chill
 python-dotenv
 pytz
+requests
+selenium
