@@ -13,13 +13,12 @@ def set_chrome_options():
     """Sets chrome options for Selenium.
     Chrome options for headless browser is enabled.
     """
-    PROXY = "12.345.678.910:8080"
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--proxy-server=%s' % PROXY)
     chrome_options.add_argument('--headless')
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_prefs = {}
+    prefs = {"profile.default_content_setting_values.notifications" : 2}
+    chrome_options.add_experimental_option("prefs",prefs)
     # chrome_options.experimental_options["prefs"] = chrome_prefs
     # chrome_prefs["profile.default_content_settings"] = {"images": 2}
 
