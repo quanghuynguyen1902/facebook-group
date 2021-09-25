@@ -9,6 +9,7 @@ import re
 
 def remove_emojis(data):
     data = data.strip()
+    data = data.replace("#BTDDL", "#CAGT-KLNV")
     emoj = re.compile(
         "["
         u"\U0001F600-\U0001F64F"  # emoticons

@@ -3,16 +3,22 @@ import os
 from dotenv import load_dotenv
 from dateutil import parser
 import pytz
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta, date
+import time
 import traceback
 import sys
 import datetime
-from fb import post_fb
+
+
+from fb import post_fb, login_fb
+from discord_bot import send_message
 from error_fb import map_code_error, log_error
 
 
 class AutoTool:
     def __init__(self):
+        self.start_time = ""
+        self.end_time = ""
         self.number_post = ""
         self.group_id = ""
         self.access_token = ""
@@ -35,9 +41,9 @@ class AutoTool:
             raise ValueError("Error when load env file")
 
     def crawl_posts(self):
-        '''
-            Crawl 5 posts of group "Biet the deo di lam"
-        '''
+        """
+        Crawl 5 posts of group "Biet the deo di lam"
+        """
 
         url = f"{self.default_fb}/{self.group_id}?fields=feed.limit({self.number_post})&access_token={self.access_token}"
 
@@ -50,32 +56,35 @@ class AutoTool:
 
         self.crawl_datas = group_posts["feed"]["data"]
 
+    def get_start_and_end(self):
+
+        VN_TZ = pytz.timezone("Asia/Ho_Chi_Minh")
+        ago = dt.now(VN_TZ) - timedelta(1)
+        self.start_time = ago.replace(hour=0, minute=0, second=0, microsecond=0)
+        self.end_time = self.start_time + timedelta(1)
+
     def filter_posts(self):
-        '''
-            filter matching posts 
-        '''
+        """
+        filter matching posts
+        """
 
         VN_TZ = pytz.timezone("Asia/Ho_Chi_Minh")
 
-        # get today's date
-        time_now = dt.now(VN_TZ)
-        time_ago = dt.now(VN_TZ) - datetime.timedelta(minutes=360)
-
         for data in self.crawl_datas:
             created_time = parser.parse(
-                parser.parse(data["updated_time"]).astimezone(VN_TZ).isoformat()
+                parser.parse(data["created_time"]).astimezone(VN_TZ).isoformat()
             )
 
-            if created_time >= time_ago and created_time <= time_now:
+            if created_time > self.start_time and created_time < self.end_time:
                 self.filter_datas.append(data)
 
         if len(self.filter_datas) == 0:
             raise ValueError("Not found valid posts")
 
     def get_datas(self):
-        '''
-            get message and 1 image of posts 
-        '''
+        """
+        get message and 1 image of posts
+        """
 
         option = "fields=message,full_picture"
 
@@ -95,10 +104,10 @@ class AutoTool:
 
     def post_group(self):
 
-        '''
-            post datas to group "Com ao gao tien - kiep lam nhan vien
-        '''
-        
+        """
+        post datas to group "Com ao gao tien - kiep lam nhan vien
+        """
+
         # for data in self.datas:
         params = {
             "url": "https://i.ytimg.com/vi/lCxDAprbFx8/hqdefault.jpg",
@@ -109,15 +118,43 @@ class AutoTool:
         response = requests.post(url, params=params).json()
         log_error(map_code_error, response)
 
-try:
-    account = {"gmail": "taolasieunhansylas@gmail.com", "password": "asdfjkieurnakf934@"}
-    crawl = AutoTool()
-    crawl.load_env()
-    crawl.crawl_posts()
-    crawl.filter_posts()
-    crawl.get_datas()
-    for content in crawl.datas:
-        post_fb(account, content)
 
-except Exception as e:
-    print(f"Traceback: {traceback.format_exc()}")
+def main():
+    try:
+        account = {
+            "gmail": "dkingsama2000@gmail.com",
+            "password": "skjfieurndasfier234@",
+        }
+
+        driver = login_fb(account)
+
+        crawl = AutoTool()
+        crawl.load_env()
+
+        while True:
+            crawl.crawl_posts()
+            crawl.get_start_and_end()
+            crawl.filter_posts()
+            crawl.get_datas()
+
+            post_fb(driver, crawl.datas)
+
+            if len(sys.argv) > 1:
+                send_message("Post status successfully")
+
+            else:
+                print("Post status successfully")
+
+            time.sleep(86400)
+
+    except Exception as e:
+        if len(sys.argv) > 1:
+            send_message(
+                f"<@861984704084181012> error: {e} \n Traceback: {traceback.format_exc()}"
+            )
+        else:
+            print(f"error: {e} \n Traceback: {traceback.format_exc()}")
+
+
+if __name__ == "__main__":
+    main()
